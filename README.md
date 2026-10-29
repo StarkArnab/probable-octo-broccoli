@@ -1,6 +1,6 @@
 # Orbit — personal Kanban
 
-Next.js dashboard with Supabase email-link authentication, owner-restricted database policies, multiple personal boards, draggable cards, priorities, labels, due dates, search, archive, board/list views, and Vercel Analytics.
+Next.js dashboard with Supabase email and password authentication, owner-restricted database policies, multiple personal boards, draggable cards, priorities, labels, due dates, search, archive, board/list views, and Vercel Analytics.
 
 ## Development
 
@@ -10,7 +10,7 @@ Database migration: `supabase/migrations/202610300001_personal_kanban.sql` (alre
 
 ## Authentication
 
-The owner email in `lib/supabase.ts` matches the email allowed by the database policies. Changing access requires changing both. Never expose a Supabase service-role key to the browser. Supabase Site URL and Redirect URLs must include the deployed production URL. Sign in with the owner email and open the email link in the same browser. SMTP settings and delivery quotas are managed in Supabase.
+The owner email in `lib/supabase.ts` matches the email allowed by the database policies. Changing access requires changing both. Never expose a Supabase service-role key to the browser. Create the owner account in Supabase Authentication → Users → Add user → Create new user, using the owner email and a strong password. Confirm the email during creation. If the account already exists, set its password through Supabase’s account recovery/admin flow. Sign in at the deployed URL using that email and password. Do not send passwords through chat or commit them. Password recovery is managed through Supabase; the app does not expose public registration.
 
 ## Deployment
 
