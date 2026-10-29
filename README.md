@@ -21,3 +21,13 @@ GitHub `main` deploys to the existing Vercel project. Required public environmen
 Use the connected Freelancing team in Linear for dashboard bugs. Include reproduction steps, expected behavior, actual behavior, and screenshots where useful. Ask Codex in this chat to work on the issue identifier. The app links to Linear; it does not sync private cards to Linear.
 
 Unattended Linear issue → Codex fix → review → production deployment is not enabled by connecting these accounts. It requires an authorized event-triggered runner and model credentials/budget. Until configured, request a fix in Codex; pushes to main trigger Vercel deployment.
+
+## Appearance
+
+Use the theme selector in the login header or dashboard topbar to choose Light, Dark, or System. System is the default and follows device changes immediately. The preference is stored in this browser under `orbit-theme` and synchronizes across tabs. If browser storage is blocked, switching still works for the current page, but the choice cannot persist after a reload.
+
+## Browser checks
+
+Run `npx playwright install chromium` once, then `npm test`. The suite starts its own local Next.js server on port 3100 and intercepts Supabase requests with isolated fixtures. It does not need real credentials and does not modify production data. For an existing Chromium installation, set `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` to its executable path.
+
+Checks cover desktop/mobile themes, system changes, saved and cross-tab preferences, unavailable browser storage, theme initialization before hydration, keyboard access, sampled dark text contrast, form draft preservation, and login/card flows in both themes. Login and data tests use API fixtures; they do not replace a live end-to-end sign-in check. Screenshots and failure traces are written to the ignored `test-results/` directory.
