@@ -1,0 +1,286 @@
+/* The existing light palette stays in globals.css. */
+:root {
+  color-scheme: light;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.login-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.theme-selector {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 6px;
+  margin: 0;
+  padding: 0 8px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: #fff;
+  color: #53684f;
+}
+
+.theme-selector select {
+  width: auto;
+  min-height: 34px;
+  padding: 6px 3px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.theme-selector:focus-within {
+  outline: 2px solid #789f7e;
+  outline-offset: 3px;
+}
+
+.theme-selector select:focus {
+  outline: none;
+}
+
+.topbar-right .theme-selector {
+  margin-right: 12px;
+}
+
+/* Native controls and every app surface share the same dark color scheme. */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --ink: #e1eae2;
+  --muted: #a7b8aa;
+  --green: #365f4b;
+  --line: #35463a;
+  --cream: #19241e;
+  --dark-background: #141d18;
+  --dark-sidebar: #19241e;
+  --dark-panel: #202d25;
+  --dark-raised: #27382c;
+  --dark-muted: #a7b8aa;
+  --dark-soft: #b7c8b4;
+  --dark-accent: #bfd29b;
+}
+
+[data-theme='dark'] body {
+  background: var(--dark-background);
+}
+
+[data-theme='dark'] :is(input, textarea, select) {
+  background: var(--dark-background);
+  border-color: var(--line);
+  color: var(--ink);
+}
+
+[data-theme='dark'] :is(input, textarea)::placeholder {
+  color: var(--dark-muted);
+  opacity: 1;
+}
+
+[data-theme='dark'] :is(input, textarea, select):focus {
+  outline-color: #87aa85;
+  border-color: #87aa85;
+}
+
+[data-theme='dark'] :is(button, a):focus-visible {
+  outline-color: #bed49d;
+}
+
+[data-theme='dark'] :is(.sidebar, .column, .list-header, .boot) {
+  background: var(--dark-sidebar);
+  border-color: var(--line);
+}
+
+[data-theme='dark'] :is(.workspace-switch, .stats, .task-card, .list-view, .modal, .theme-selector) {
+  background: var(--dark-panel);
+  border-color: var(--line);
+}
+
+[data-theme='dark'] :is(.secondary, .search, .filter) {
+  background: var(--dark-panel);
+  border-color: var(--line);
+  color: var(--ink);
+}
+
+[data-theme='dark'] :is(.topbar, .workspace-switch small, .workspace-switch > svg,
+  .nav-label, .nav-item, .boards-label button, .board-nav, .add-board,
+  .linear-link, .user-profile small, .user-profile button, .topbar-right,
+  .eyebrow, .page-heading p, .column-head > svg, .column-head button,
+  .card-top button, .card-body p, .task-card footer, .add-card,
+  .column-empty span, .board-footer, .empty-list, .empty-workspace p,
+  .modal header > button, .modal label, .loading, .login-story > p,
+  .login-panel > p, .login-panel label, .private-note, .login-footer, .login-bottom) {
+  color: var(--dark-muted);
+}
+
+[data-theme='dark'] :is(.topbar strong, .column-head h2, .board-nav.active) {
+  color: var(--ink);
+}
+
+[data-theme='dark'] :is(.nav-item.selected, .board-nav.active, .view-toggle) {
+  background: var(--dark-raised);
+  color: #d0dfb9;
+  border-color: var(--line);
+}
+
+[data-theme='dark'] :is(.nav-count, .column-count) {
+  background: #324535;
+  color: #c6d9bd;
+}
+
+[data-theme='dark'] :is(.avatar, .avatar.square, .card-avatar) {
+  background: #344632;
+  color: #d6e4bc;
+}
+
+[data-theme='dark'] .focus-note {
+  background: #2c3a25;
+  color: #d1dfb5;
+}
+
+[data-theme='dark'] .focus-note p {
+  color: #becda9;
+}
+
+[data-theme='dark'] .focus-note::after {
+  color: #3e5132;
+}
+
+[data-theme='dark'] :is(.focus-note > svg, .heading-dot, .empty-orbit, .art-spark, .logo-dot) {
+  color: var(--dark-accent);
+}
+
+[data-theme='dark'] :is(.user-profile, .private-note, .stats > div, .task-card footer) {
+  border-color: var(--line);
+}
+
+[data-theme='dark'] .stats span:not(.stat-icon),
+[data-theme='dark'] .stats strong small,
+[data-theme='dark'] .progress-stat > small {
+  color: var(--dark-muted);
+}
+
+[data-theme='dark'] .stat-icon.neutral {
+  background: #303d31;
+  color: #bdccb6;
+}
+
+[data-theme='dark'] .stat-icon.purple {
+  background: #393243;
+  color: #c5acd9;
+}
+
+[data-theme='dark'] .stat-icon.green {
+  background: #2b4130;
+  color: #b0d3a2;
+}
+
+[data-theme='dark'] :is(.progress-track, .column-rule) {
+  background: #354a37;
+}
+
+[data-theme='dark'] .column:has(.blue) .column-rule { background: #344656; }
+[data-theme='dark'] .column:has(.purple) .column-rule { background: #493b55; }
+[data-theme='dark'] .column:has(.green) .column-rule { background: #3c5034; }
+[data-theme='dark'] .column-head.blue > svg { color: #a9c9eb; }
+[data-theme='dark'] .column-head.purple > svg { color: #cbb2e2; }
+[data-theme='dark'] .column-head.green > svg { color: #a8d39b; }
+
+[data-theme='dark'] .view-toggle button { color: var(--dark-muted); }
+[data-theme='dark'] .view-toggle .chosen {
+  background: #3a4d3c;
+  color: #eef4e7;
+}
+
+[data-theme='dark'] :is(.search input, .filter select, .theme-selector select) {
+  background: transparent;
+  color: var(--ink);
+}
+
+[data-theme='dark'] .search kbd { color: var(--dark-muted); }
+[data-theme='dark'] .theme-selector { color: var(--ink); }
+[data-theme='dark'] .theme-selector select:focus { outline: none; }
+[data-theme='dark'] .theme-selector:focus-within { outline-color: #bed49d; }
+[data-theme='dark'] .theme-selector option { background: var(--dark-panel); }
+[data-theme='dark'] .column-empty { color: #74876f; }
+[data-theme='dark'] .column.drag-over { background: #2b3d2a; }
+[data-theme='dark'] .add-card { border-color: #4a6044; }
+[data-theme='dark'] .add-card:hover { background: #2d402b; color: #d4e5c6; }
+
+[data-theme='dark'] .priority.low { color: #a7d2b8; }
+[data-theme='dark'] .priority.medium { color: #d5ca85; }
+[data-theme='dark'] .priority.high { color: #e8bb88; }
+[data-theme='dark'] .priority.urgent,
+[data-theme='dark'] :is(.task-card footer .overdue, .danger) { color: #eeaaa1; }
+
+[data-theme='dark'] .tag { background: #383c29; color: #ded7a3; }
+[data-theme='dark'] .tag-1 { background: #2d3d52; color: #b8cdef; }
+[data-theme='dark'] .tag-2 { background: #45334b; color: #dec0e5; }
+
+[data-theme='dark'] .empty-workspace {
+  background: var(--dark-sidebar);
+  border-color: #485e40;
+}
+
+[data-theme='dark'] .alert {
+  background: #412d26;
+  border-color: #785444;
+  color: #f3c6b1;
+}
+
+[data-theme='dark'] :is(.modal-backdrop, .side-backdrop) {
+  background: #050d08b8;
+}
+
+[data-theme='dark'] .login-page {
+  background-color: var(--dark-background);
+  background-image: radial-gradient(ellipse at 16% 60%, #2b3d2488, transparent 60%);
+}
+
+[data-theme='dark'] .login-panel {
+  background: var(--dark-panel);
+  border-color: var(--line);
+}
+
+[data-theme='dark'] :is(.lock-icon, .art-board) {
+  background: #293923;
+  border-color: #3d5035;
+  color: #bfd29b;
+}
+
+[data-theme='dark'] .login-story h1 em { color: #b4cf98; }
+[data-theme='dark'] .pill { color: #b8c9ab; border-color: #46573d; }
+[data-theme='dark'] .art-col > div { background: #27352b; }
+[data-theme='dark'] :is(.art-col > i, .art-line) { background: #46583c; }
+[data-theme='dark'] .tiny-tag { background: #41412a; color: #ded5a3; }
+[data-theme='dark'] .tiny-tag.violet { background: #493b50; color: #ddc6e5; }
+[data-theme='dark'] .tiny-tag.mint { background: #354b2c; color: #c2dca6; }
+[data-theme='dark'] .art-col svg { color: #bfd5a2; }
+
+@media (max-width: 650px) {
+  .login-header { align-items: flex-start; gap: 10px; }
+  .login-brand { flex-wrap: wrap; }
+  .login-brand .pill { margin-left: 0; }
+  .theme-selector { padding: 0 6px; }
+  .theme-selector select { font-size: 10px; min-height: 36px; }
+  .topbar-right .theme-selector { margin-right: 0; }
+  .topbar-right { gap: 6px; }
+  .topbar-right > svg { display: none; }
+  .topbar-right .avatar { margin-left: 0; }
+  .topbar > strong { max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+}
