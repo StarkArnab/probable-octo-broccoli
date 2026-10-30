@@ -1,6 +1,6 @@
 'use client';
 
-import { useId, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { X } from 'lucide-react';
 import './label-picker.css';
 
@@ -28,11 +28,25 @@ type Props = {
 export function LabelPicker({ labels, options, text, onTextChange, onChange, disabled }: Props) {
   const id = useId();
   const input = useRef<HTMLInputElement>(null);
+  const list = useRef<HTMLUListElement>(null);
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(-1);
   const suggestions = uniqueLabels(options).filter(option =>
     !labels.some(label => label.toLowerCase() === option.toLowerCase()) &&
     option.toLowerCase().includes(text.trim().toLowerCase()));
+  const activeSuggestion = suggestions[active];
+  useEffect(() => {
+    const container = list.current;
+    const option = container?.children.item(active);
+    if (!open || !container || !option || !activeSuggestion) return;
+    const bounds = container.getBoundingClientRect();
+    const top = bounds.top + container.clientTop;
+    const bottom = top + container.clientHeight;
+    const selected = option.getBoundingClientRect();
+    // Scroll only the list; scrollIntoView can also move the editor and page.
+    if (selected.top < top) container.scrollTop -= top - selected.top;
+    else if (selected.bottom > bottom) container.scrollTop += selected.bottom - bottom;
+  }, [active, activeSuggestion, open]);
   function add(label: string) {
     const next = uniqueLabels([...labels, label]);
     if (next.length > MAX_LABELS) return;
@@ -71,7 +85,7 @@ export function LabelPicker({ labels, options, text, onTextChange, onChange, dis
       <button type="button" className="secondary" disabled={disabled || !text.trim() || labels.length >= MAX_LABELS} onClick={() => add(text)}>Add label</button>
     </div>
     <p id={`${id}-help`} className="label-help">{labels.length >= MAX_LABELS ? '8 of 8 labels selected. Remove a label to add another.' : 'Choose up to 8 labels. Search or type a new one, then press Enter or Add label.'}</p>
-    {open && suggestions.length > 0 && <ul id={`${id}-options`} role="listbox" aria-label="Existing labels" className="label-options">
+    {open && suggestions.length > 0 && <ul ref={list} id={`${id}-options`} role="listbox" aria-label="Existing labels" className="label-options">
       {suggestions.map((label, index) => <li key={label} id={`${id}-option-${index}`} role="option" aria-selected={active === index}
         onPointerDown={event => event.preventDefault()} onClick={() => add(label)}>{label}</li>)}
     </ul>}
