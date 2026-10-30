@@ -18,6 +18,7 @@ async function mockWorkspace(page: Page) {
     else if (url.pathname.endsWith('/user')) data = user;
     else if (url.pathname.endsWith('/boards')) data = req.method() === 'POST' ? { ...board, ...req.postDataJSON() } : [board];
     else if (url.pathname.endsWith('/cards')) {
+      if (['POST', 'PATCH'].includes(req.method()) && ((req.postDataJSON().labels?.length ?? 0) > 8 || req.postDataJSON().title === 'Database rejection')) return route.fulfill({ status: 400, contentType: 'application/json', headers, body: JSON.stringify({ message: 'new row violates check constraint cards_labels_check', code: '23514' }) });
       if (req.method() === 'POST') {
         const card = { id: 'test-card', archived: false, created_at: board.created_at, ...req.postDataJSON() };
         cards.push(card); data = card;
@@ -64,16 +65,38 @@ test('adds, searches, deduplicates and persists independent labels', async ({ pa
   await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
 
-test('preserves existing labels and saves pending text without a count limit', async ({ page }) => {
+test('preserves existing labels and enforces the eight-label database limit', async ({ page }) => {
   await page.getByRole('button', { name: 'Edit Legacy card', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Remove Personal', exact: true })).toBeVisible();
   const input = page.getByRole('combobox', { name: 'Labels', exact: true });
-  for (let n = 1; n <= 8; n++) { await input.fill(`Label ${n}`); await input.press('Enter'); }
-  await input.fill('Final pending label');
+  for (let n = 1; n <= 7; n++) { await input.fill(`Label ${n}`); await input.press('Enter'); }
+  await input.fill('Ninth label');
+  await input.press('Enter');
+  await expect(page.getByRole('button', { name: 'Remove Ninth label', exact: true })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Add label', exact: true })).toBeDisabled();
   await page.getByRole('button', { name: 'Save card' }).click();
-  await expect(page.locator('.task-card .tag')).toHaveCount(10);
+  await expect(page.getByRole('dialog')).toBeVisible();
+  await expect(page.getByRole('dialog').getByRole('alert')).toContainText('8 labels');
+  await input.fill('');
+  await page.getByRole('button', { name: 'Save card' }).click();
+  await expect(page.locator('.task-card .tag')).toHaveCount(8);
   await page.reload();
-  await expect(page.locator('.task-card .tag')).toHaveCount(10);
+  await expect(page.locator('.task-card .tag')).toHaveCount(8);
+});
+
+test('keeps labels editable after a database constraint rejection', async ({ page }) => {
+  await page.getByRole('button', { name: 'Edit Legacy card', exact: true }).click();
+  await page.getByLabel('Card title').fill('Database rejection');
+  const input = page.getByRole('combobox', { name: 'Labels', exact: true });
+  await input.fill('Pending label');
+  await page.getByRole('button', { name: 'Save card' }).click();
+  await expect(page.getByRole('dialog')).toBeVisible();
+  await expect(page.getByRole('dialog').getByRole('alert')).toContainText('check constraint');
+  await expect(page.getByRole('button', { name: 'Remove Personal', exact: true })).toBeVisible();
+  await expect(input).toHaveValue('Pending label');
+  await page.getByLabel('Card title').fill('Recovered card');
+  await page.getByRole('button', { name: 'Save card' }).click();
+  await expect(page.locator('.task-card .tag')).toHaveText(['Personal', 'Pending label']);
 });
 
 test('supports keyboard reuse, blank labels, and responsive long chips', async ({ page }) => {
@@ -95,4 +118,10 @@ test('supports keyboard reuse, blank labels, and responsive long chips', async (
   expect(await picker.evaluate(el => el.scrollWidth <= el.clientWidth)).toBe(true);
   await page.getByRole('button', { name: 'Save card' }).click();
   await expect(page.locator('.task-card').filter({ has: page.getByRole('heading', { name: 'Wrapped labels' }) }).locator('.tag')).toHaveCount(2);
+  await page.getByRole('button', { name: 'New card', exact: true }).click();
+  await input.focus();
+  await input.press('ArrowUp');
+  await expect(page.getByRole('option').last()).toHaveAttribute('aria-selected', 'true');
+  await input.press('Enter');
+  await expect(page.getByRole('button', { name: 'Remove A long custom label with spaces that should wrap within the editor and card', exact: true })).toBeVisible();
 });

@@ -4,6 +4,8 @@ import { useId, useRef, useState } from 'react';
 import { X } from 'lucide-react';
 import './label-picker.css';
 
+export const MAX_LABELS = 8;
+
 export function uniqueLabels(labels: string[]) {
   const seen = new Set<string>();
   return labels.map(label => label.trim()).filter(label => {
@@ -32,7 +34,9 @@ export function LabelPicker({ labels, options, text, onTextChange, onChange, dis
     !labels.some(label => label.toLowerCase() === option.toLowerCase()) &&
     option.toLowerCase().includes(text.trim().toLowerCase()));
   function add(label: string) {
-    onChange(uniqueLabels([...labels, label]));
+    const next = uniqueLabels([...labels, label]);
+    if (next.length > MAX_LABELS) return;
+    onChange(next);
     onTextChange('');
     setActive(-1);
     input.current?.focus();
@@ -53,16 +57,20 @@ export function LabelPicker({ labels, options, text, onTextChange, onChange, dis
         if (event.nativeEvent.isComposing) return;
         if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
           event.preventDefault(); setOpen(true);
-          setActive(index => suggestions.length ? (index + (event.key === 'ArrowDown' ? 1 : -1) + suggestions.length) % suggestions.length : -1);
+          setActive(index => {
+            if (!suggestions.length) return -1;
+            if (index < 0) return event.key === 'ArrowDown' ? 0 : suggestions.length - 1;
+            return (index + (event.key === 'ArrowDown' ? 1 : -1) + suggestions.length) % suggestions.length;
+          });
         } else if (event.key === 'Enter') {
           event.preventDefault(); add(open && active >= 0 ? suggestions[active] ?? text : text);
         } else if (event.key === 'Escape' && open) {
           event.preventDefault(); event.stopPropagation(); setOpen(false); setActive(-1);
         }
       }} />
-      <button type="button" className="secondary" disabled={disabled || !text.trim()} onClick={() => add(text)}>Add label</button>
+      <button type="button" className="secondary" disabled={disabled || !text.trim() || labels.length >= MAX_LABELS} onClick={() => add(text)}>Add label</button>
     </div>
-    <p id={`${id}-help`} className="label-help">Search existing labels or type a new one. Press Enter or Add label.</p>
+    <p id={`${id}-help`} className="label-help">{labels.length >= MAX_LABELS ? '8 of 8 labels selected. Remove a label to add another.' : 'Choose up to 8 labels. Search or type a new one, then press Enter or Add label.'}</p>
     {open && suggestions.length > 0 && <ul id={`${id}-options`} role="listbox" aria-label="Existing labels" className="label-options">
       {suggestions.map((label, index) => <li key={label} id={`${id}-option-${index}`} role="option" aria-selected={active === index}
         onPointerDown={event => event.preventDefault()} onClick={() => add(label)}>{label}</li>)}
