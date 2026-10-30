@@ -18,7 +18,7 @@ GitHub `main` deploys to the existing Vercel project. Required public environmen
 
 ## Bugs and Linear
 
-Use the connected Freelancing team in Linear for dashboard bugs. Include reproduction steps, expected behavior, actual behavior, and screenshots where useful. Ask Codex in this chat to work on the issue identifier. The app links to Linear; it does not sync private cards to Linear.
+Use the connected Freelancing team in Linear for dashboard bugs. Include reproduction steps, expected behavior, actual behavior, and screenshots where useful. Ask Codex in this chat to work on the issue identifier. The sidebar opens [Kanban (Orbit)](https://linear.app/free-lancing/project/kanban-orbit-1fc5721f941e) in a new tab; its destination is configured in `lib/links.ts`. Linear handles login and returning to that project. The app links to Linear; it does not sync private cards to Linear.
 
 Unattended Linear issue → Codex fix → review → production deployment is not enabled by connecting these accounts. It requires an authorized event-triggered runner and model credentials/budget. Until configured, request a fix in Codex; pushes to main trigger Vercel deployment.
 
