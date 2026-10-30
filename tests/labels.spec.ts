@@ -125,3 +125,38 @@ test('supports keyboard reuse, blank labels, and responsive long chips', async (
   await input.press('Enter');
   await expect(page.getByRole('button', { name: 'Remove A long custom label with spaces that should wrap within the editor and card', exact: true })).toBeVisible();
 });
+
+test('keeps keyboard suggestions visible inside the scrolling list', async ({ page }) => {
+  await page.route('https://orbit-test.supabase.co/rest/v1/cards?**', route => route.fulfill({
+    status: 200, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' },
+    body: JSON.stringify(Array.from({ length: 24 }, (_, index) => ({
+      id: `label-source-${index}`, board_id: 'test-board', user_id: ownerUserId,
+      title: `Source ${index}`, description: '', status: 'todo', priority: 'medium', due_date: null,
+      labels: [`Reusable label ${String(index + 1).padStart(2, '0')}`], position: index, archived: false,
+    }))),
+  }));
+  await page.reload();
+  await page.getByRole('button', { name: 'New card', exact: true }).click();
+  const input = page.getByRole('combobox', { name: 'Labels', exact: true });
+  await input.focus();
+  const list = page.getByRole('listbox', { name: 'Existing labels' });
+  await list.scrollIntoViewIfNeeded();
+  const outerScroll = () => page.evaluate(() => ({ page: window.scrollY, modal: document.querySelector('.modal')!.scrollTop }));
+  const before = await outerScroll();
+  for (let index = 0; index < 20; index++) await input.press('ArrowDown');
+  const active = list.getByRole('option', { selected: true });
+  await expect(active).toHaveText('Reusable label 20');
+  const activeInsideList = () => active.evaluate(element => {
+    const option = element.getBoundingClientRect();
+    const list = element.parentElement!;
+    const top = list.getBoundingClientRect().top + list.clientTop;
+    return option.top >= top && option.bottom <= top + list.clientHeight;
+  });
+  await expect.poll(activeInsideList).toBe(true);
+  expect(await outerScroll()).toEqual(before);
+  // Wrapping back to the start must also reveal the newly active option.
+  for (let index = 0; index < 5; index++) await input.press('ArrowDown');
+  await expect(active).toHaveText('Reusable label 01');
+  await expect.poll(activeInsideList).toBe(true);
+  expect(await outerScroll()).toEqual(before);
+});

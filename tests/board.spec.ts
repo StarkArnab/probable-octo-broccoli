@@ -198,3 +198,51 @@ test('dragging near the bottom edge scrolls the column without losing the drag',
   await expect(column(page, 'To do').getByRole('heading', { name: 'Task 0', exact: true })).toBeVisible();
   await expect(page.locator('.task-card')).toHaveCount(45);
 });
+
+for (const zone of ['gap', 'top padding'] as const) {
+  test(`cross-column pointer drop in ${zone} persists the indicated insertion`, async ({ page }) => {
+    const handle = page.getByRole('button', { name: 'Move Task 0', exact: true });
+    const start = await handle.boundingBox();
+    const stack = column(page, 'To do').locator('.card-stack');
+    const surface = await stack.boundingBox();
+    const first = await stack.locator('.task-card').nth(0).boundingBox();
+    const second = await stack.locator('.task-card').nth(1).boundingBox();
+    if (!start || !surface || !first || !second) throw new Error('Missing insertion geometry');
+    const y = zone === 'gap' ? (first.y + first.height + second.y) / 2 : surface.y + 1;
+    await page.mouse.move(start.x + start.width / 2, start.y + start.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(start.x + start.width / 2 + 8, start.y + start.height / 2, { steps: 3 });
+    await page.mouse.move(surface.x + 25, y, { steps: 15 });
+    await page.mouse.up();
+    const expected = zone === 'gap' ? ['Task 36', 'Task 0', 'Task 37'] : ['Task 0', 'Task 36', 'Task 37'];
+    await expect(stack.locator('h3').filter({ hasText: /^Task (0|36|37)$/ })).toHaveText(expected);
+    await page.reload();
+    await expect(column(page, 'To do').locator('h3').filter({ hasText: /^Task (0|36|37)$/ })).toHaveText(expected);
+    await expect(page.locator('.task-card')).toHaveCount(45);
+  });
+}
+
+for (const direction of ['down', 'up'] as const) {
+  test(`same-column pointer insertion ${direction} has no index offset`, async ({ page }) => {
+    const source = direction === 'down' ? 0 : 1;
+    const handle = page.getByRole('button', { name: `Move Task ${source}`, exact: true });
+    const start = await handle.boundingBox();
+    const stack = column(page, 'Backlog').locator('.card-stack');
+    const surface = await stack.boundingBox();
+    const neighbor = await stack.locator('.task-card').nth(direction === 'down' ? 1 : 0).boundingBox();
+    if (!start || !surface || !neighbor) throw new Error('Missing reorder geometry');
+    const y = direction === 'down' ? neighbor.y + neighbor.height + 5 : surface.y + 1;
+    await page.mouse.move(start.x + start.width / 2, start.y + start.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(start.x + start.width / 2 + 8, start.y + start.height / 2, { steps: 3 });
+    await page.mouse.move(surface.x + 25, y, { steps: 15 });
+    await page.mouse.up();
+    await expect(stack.locator('h3').nth(0)).toHaveText('Task 1');
+    await expect(stack.locator('h3').nth(1)).toHaveText('Task 0');
+    await expect(stack.locator('h3').nth(2)).toHaveText('Task 2');
+    await page.reload();
+    await expect(column(page, 'Backlog').locator('h3').nth(0)).toHaveText('Task 1');
+    await expect(column(page, 'Backlog').locator('h3').nth(1)).toHaveText('Task 0');
+    await expect(page.locator('.task-card')).toHaveCount(45);
+  });
+}

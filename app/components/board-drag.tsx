@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, type ReactNode } from 'react';
-import { DndContext, DragOverlay, PointerSensor, KeyboardSensor, TraversalOrder, closestCorners, pointerWithin, useDroppable, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
+import { useRef, useState, type ReactNode } from 'react';
+import { DndContext, DragOverlay, PointerSensor, KeyboardSensor, TraversalOrder, closestCorners, pointerWithin, useDroppable, useSensor, useSensors, type CollisionDetection, type DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, useSortable, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { GripVertical } from 'lucide-react';
@@ -12,6 +12,7 @@ export function BoardDrag({ items, disabled, onMove, onError, children }: {
   items: Item[]; disabled: boolean; onMove: (id: string, status: string, position: number) => void; onError: (message: string) => void; children: ReactNode;
 }) {
   const [active, setActive] = useState<string | null>(null);
+  const collision = useRef<Parameters<CollisionDetection>[0] | null>(null);
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
@@ -25,7 +26,16 @@ export function BoardDrag({ items, disabled, onMove, onError, children }: {
     if (!card || !['backlog', 'todo', 'progress', 'done'].includes(status)) return;
     const destination = items.filter(c => !c.archived && c.status === status && c.id !== card.id).sort((a, b) => a.position - b.position || a.id.localeCompare(b.id));
     let index = target ? destination.findIndex(c => c.id === target.id) : destination.length;
-    if (target) {
+    const pointer = collision.current?.pointerCoordinates;
+    if (pointer) {
+      // Use the pointer's position even when a gap/padding hits only the stack.
+      // Excluding the dragged card avoids a same-column index adjustment.
+      index = destination.findIndex(item => {
+        const rect = collision.current?.droppableRects.get(item.id);
+        return rect && pointer.y < rect.top + rect.height / 2;
+      });
+      if (index < 0) index = destination.length;
+    } else if (target) {
       const sameColumn = card.status === status;
       const source = items.filter(c => !c.archived && c.status === card.status).sort((a, b) => a.position - b.position || a.id.localeCompare(b.id));
       const after = sameColumn ? source.findIndex(c => c.id === card.id) < source.findIndex(c => c.id === target.id) : (dragged.rect.current.translated?.top ?? 0) > over.rect.top + over.rect.height / 2;
@@ -40,7 +50,7 @@ export function BoardDrag({ items, disabled, onMove, onError, children }: {
     }
     onMove(card.id, status, position);
   }
-  return <DndContext autoScroll={{ order: TraversalOrder.ReversedTreeOrder }} sensors={sensors} collisionDetection={args => { const pointer = pointerWithin(args); return pointer.length ? pointer : closestCorners(args); }} onDragStart={({ active }) => setActive(String(active.id))} onDragCancel={() => setActive(null)} onDragEnd={finish}>
+  return <DndContext autoScroll={{ order: TraversalOrder.ReversedTreeOrder }} sensors={sensors} collisionDetection={args => { collision.current = args; const pointer = pointerWithin(args); return pointer.length ? pointer : closestCorners(args); }} onDragStart={({ active }) => setActive(String(active.id))} onDragCancel={() => setActive(null)} onDragEnd={finish}>
     {children}
     <DragOverlay>{active && <div className="task-card drag-preview">{items.find(c => c.id === active)?.title}</div>}</DragOverlay>
   </DndContext>;
