@@ -22,7 +22,6 @@
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
-    "test": "playwright test",
-    "test:headers": "node scripts/check-frame-headers.mjs"
+    "test": "playwright test"
   }
 }

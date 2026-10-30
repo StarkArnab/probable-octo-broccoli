@@ -22,7 +22,7 @@ npm run build
 npm run start -- --hostname 127.0.0.1 --port 3219
 ```
 
-In a second terminal run `npm run test:headers -- http://127.0.0.1:3219`.
+In a second terminal run `node scripts/check-frame-headers.mjs http://127.0.0.1:3219`.
 This checks actual GET/HEAD responses and a nested 404; it sends no credentials
 and accepts only loopback HTTP URLs. It does not reproduce an authenticated attack.
 
