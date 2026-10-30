@@ -20,8 +20,11 @@ def main():
                '--tmpfs', '/var/lib/postgresql/data',
                '--env', 'POSTGRES_HOST_AUTH_METHOD=trust', IMAGE,
                stdout=subprocess.DEVNULL)
+        # The image's temporary init server accepts Unix sockets only.
+        # Wait for the final TCP server, and use that same transport for SQL.
         for _ in range(60):
-            ready = subprocess.run(['docker', 'exec', name, 'pg_isready', '-U', 'postgres'],
+            ready = subprocess.run(['docker', 'exec', name, 'pg_isready',
+                                    '-h', '127.0.0.1', '-U', 'postgres'],
                                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             if ready.returncode == 0:
                 break
@@ -34,7 +37,7 @@ def main():
                  ROOT / 'tests/database/rls.sql']
         for path in files:
             print(f'Applying {path.relative_to(ROOT)}', flush=True)
-            docker('exec', '-i', name, 'psql', '-X', '-U', 'postgres',
+            docker('exec', '-i', name, 'psql', '-X', '-h', '127.0.0.1', '-U', 'postgres',
                    '-v', 'ON_ERROR_STOP=1', input=path.read_text(), text=True)
         print('RLS regression checks passed (disposable database only).')
     finally:
