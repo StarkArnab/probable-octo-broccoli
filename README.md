@@ -6,7 +6,7 @@ Next.js dashboard with Supabase email and password authentication, owner-restric
 
 Use Node.js 24. `npm ci`, copy `.env.example` to `.env.local` and supply the project URL and publishable key. Run `npm run dev`. Checks: `npm run typecheck` and `npm run build`.
 
-Database migration: `supabase/migrations/202610300001_personal_kanban.sql` (already applied to the connected Kanban project).
+Database migrations, applied in order: `supabase/migrations/202610300001_personal_kanban.sql`, then `supabase/migrations/202610300002_bind_owner_user_id.sql`. Deployed state must be confirmed separately by the owner; see the [deployment verification checklist](docs/deployment-verification.md).
 
 ## Authentication
 
@@ -31,3 +31,11 @@ Use the theme selector in the login header or dashboard topbar to choose Light, 
 Run `npx playwright install chromium` once, then `npm test`. The suite starts its own local Next.js server on port 3100 and intercepts Supabase requests with isolated fixtures. It does not need real credentials and does not modify production data. For an existing Chromium installation, set `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` to its executable path.
 
 Checks cover desktop/mobile themes, system changes, saved and cross-tab preferences, unavailable browser storage, theme initialization before hydration, keyboard access, sampled dark text contrast, form draft preservation, and login/card flows in both themes. Login and data tests use API fixtures; they do not replace a live end-to-end sign-in check. Screenshots and failure traces are written to the ignored `test-results/` directory.
+
+## Offline database policy checks
+
+Run `npm run test:rls` with Python 3 and Docker available. The runner uses `postgres:17.7-alpine` (downloaded by Docker if absent), creates a uniquely named disposable container with no network, no published ports or host mounts, and a tmpfs database, and removes it on exit. It never reads `.env` or accepts a live database URL. No Supabase project or credentials are required.
+
+The fixture creates minimal dummy `auth.users`, `auth.uid()` and `auth.jwt()` contracts, applies both actual source migrations in order, and executes SQL as non-superuser `anon`/`authenticated` roles. It covers owner CRUD, anonymous grants and RLS independently, nonowner CRUD with a spoofed legacy owner email, forged ownership, reassignment, and composite board/owner foreign key mismatches. Assertions check affected row counts and SQLSTATEs, so silently filtered writes cannot masquerade as successful owner operations. Fixtures and temporary grant changes roll back before the container is discarded.
+
+These are PostgreSQL policy regression tests, separate from mocked browser tests. They do not test Supabase Auth token issuance, PostgREST, browser sessions, or deployed policies/grants. The owner UUID is deliberately the source policy literal, represented only by a dummy local row; no real account is contacted.
